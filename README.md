@@ -1,168 +1,122 @@
 # Macro-Crypto Dashboard
 
-A professional, real-time dashboard that visualizes the intersection of macroeconomic indicators and cryptocurrency market data. Built with vanilla HTML/JavaScript and auto-deployed via GitHub Pages.
+A dark GitHub Pages dashboard for monitoring macro signals that often matter to crypto markets: M2 liquidity, CPI inflation, USD strength, 10Y Treasury yields, oil inventories, PMI, and BTC/USD.
 
-## 🚀 Features
+Live site: https://imlimonh.github.io/macro-crypto-dashboard/
 
-- **Real-time Macroeconomic Data**: Fetches M2 Money Supply and CPI from the Federal Reserve Economic Data (FRED) API
-- **Crypto Market Data**: Retrieves Bitcoin (BTC/USD) pricing from CoinGecko
-- **Currency Strength Index**: Proxies DXY (US Dollar Index) via Alpha Vantage
-- **Impact Score Calculation**: Computes a 0–100 impact score based on macro-crypto correlation
-- **Dark Theme UI**: Modern, responsive design optimized for desktop and mobile
-- **Live Updates**: Dashboard refreshes data on page load and periodic intervals
+## What It Shows
 
-## 📊 Data Sources
+| Signal | Function | Source |
+| --- | --- | --- |
+| M2 Money Supply | `fredM2()` | FRED public CSV `M2SL` |
+| CPI Inflation | `fredCPI()` | FRED public CSV `CUSR0000SETA02` |
+| DXY Proxy | `alphaDXY()` | Alpha Vantage EUR/USD inverse proxy |
+| 10Y Treasury Yield | `alphaTreasury10Y()` | Alpha Vantage Treasury Yield |
+| Oil Inventories | `eiaOil()` | EIA petroleum weekly stocks |
+| US PMI | `tePMI()` | TradingEconomics free guest endpoint |
+| BTC/USD | `coingeckoBTC()` | CoinGecko public API |
 
-| Data | Source | API | Authentication |
-|------|--------|-----|-----------------|
-| M2 Money Supply | FRED | Federal Reserve | API Key (client-side) |
-| CPI (Inflation) | FRED | Federal Reserve | API Key (client-side) |
-| Bitcoin Price | CoinGecko | CoinGecko REST API | None (public) |
-| DXY Proxy | Alpha Vantage | FX Exchange Rates | API Key (client-side) |
+## API Usage
 
-## 🛠️ Getting Started
+The dashboard is a static GitHub Pages app. FRED M2 and CPI use public no-key CSV endpoints, which avoids the browser CORS failure that affected the previous FRED API calls. If the direct FRED CSV request is blocked, the page retries through a public CORS proxy because no API key is involved.
 
-### Prerequisites
-- A modern web browser (Chrome, Firefox, Safari, Edge)
-- (Optional) Node.js for local development server
+Keyed APIs are direct-only and are not sent through public CORS proxy services. Enter keys in the dashboard settings row; the browser stores them in `localStorage` for that device only.
 
-### Local Setup
+Needed keys:
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/ImLimonH/macro-crypto-dashboard.git
-   cd macro-crypto-dashboard
-   ```
+| Key | Used For |
+| --- | --- |
+| Alpha Vantage API key | DXY proxy and 10Y Treasury yield |
+| EIA API key | Oil inventories |
+| TradingEconomics client | PMI, defaults to `guest:guest` |
 
-2. **Open in browser**:
-   ```bash
-   # Option 1: Direct file open (may have CORS issues)
-   open public/dashboard.html
-   
-   # Option 2: Use a local server (recommended)
-   python3 -m http.server 8000
-   # Navigate to http://localhost:8000/public/dashboard.html
-   ```
+Important: public GitHub Pages cannot keep API keys secret if they are hardcoded into HTML or JavaScript. For production-grade security, move vendor requests into a private backend or serverless worker and keep keys in server-side environment variables.
 
-3. **View live deployment**:
-   Visit: https://ImLimonH.github.io/macro-crypto-dashboard/
+## Run Locally
 
-## 🔑 API Keys
+Clone the repository:
 
-**Important**: This is a client-side demo. API keys are embedded in the code for demonstration purposes only.
-
-### To use your own keys:
-
-1. **FRED API**: Register at [Federal Reserve Economic Data](https://fredaccount.stlouisfed.org/)
-2. **Alpha Vantage API**: Sign up at [Alpha Vantage](https://www.alphavantage.co/api/)
-3. **CoinGecko API**: Free—no registration required
-
-Update the keys in `public/dashboard.html`:
-```javascript
-const FRED_API_KEY = 'your-fred-key-here';
-const ALPHA_VANTAGE_KEY = 'your-alpha-vantage-key-here';
+```bash
+git clone https://github.com/ImLimonH/macro-crypto-dashboard.git
+cd macro-crypto-dashboard
 ```
 
-## 📈 Impact Score Methodology
+Start a local static server:
 
-The dashboard calculates a **Macro-Crypto Impact Score (0–100)** based on:
-
-- **M2 Growth**: Positive correlation with crypto prices
-- **CPI (Inflation)**: Indicates purchasing power erosion; influences both markets
-- **DXY Strength**: Inverse correlation with crypto (stronger USD = lower BTC)
-- **Bitcoin Volatility**: Current price momentum
-
-**Score Interpretation**:
-- **0–33**: Low Impact (stable macro environment)
-- **34–66**: Medium Impact (moderate volatility signals)
-- **67–100**: High Impact (significant macro-crypto correlation detected)
-
-## 🚀 Auto-Deployment
-
-This repository uses **GitHub Actions** to automatically deploy changes to GitHub Pages.
-
-### Workflow Details
-
-- **Trigger**: Pushes to `main` branch
-- **Branch**: Deployed to `gh-pages`
-- **URL**: https://ImLimonH.github.io/macro-crypto-dashboard/
-- **Frequency**: Automatic on every commit
-
-### Deployment Files
-
-- `.github/workflows/deploy.yml`: GitHub Actions workflow configuration
-- `public/dashboard.html`: Deployment source
-
-## 📁 Project Structure
-
+```bash
+python -m http.server 8000
 ```
+
+Open:
+
+```text
+http://localhost:8000/public/dashboard.html
+```
+
+The root `index.html` redirects to `public/dashboard.html`, so this also works:
+
+```text
+http://localhost:8000/
+```
+
+## Auto-Deploy
+
+The workflow at `.github/workflows/deploy.yml` deploys the repository to GitHub Pages on every push to `main`.
+
+Deployment flow:
+
+1. Checkout the repository.
+2. Configure GitHub Pages.
+3. Upload the static site as a Pages artifact.
+4. Deploy to GitHub Pages.
+
+The dashboard is available at the repository homepage after the workflow completes:
+
+https://imlimonh.github.io/macro-crypto-dashboard/
+
+## Impact Score
+
+The Crypto Impact Score is a weighted 0-100 signal:
+
+| Component | Weight |
+| --- | ---: |
+| M2 liquidity trend | 24% |
+| CPI inflation | 18% |
+| USD strength and 10Y yields | 26% |
+| Growth, oil shock, and BTC momentum | 32% |
+
+Interpretation:
+
+| Score | Level |
+| --- | --- |
+| 0-33 | Low |
+| 34-66 | Medium |
+| 67-100 | High |
+
+The score is directional and informational, not financial advice.
+
+## Project Structure
+
+```text
 macro-crypto-dashboard/
-├── README.md                       # Project documentation
-├── LICENSE                         # MIT License
-├── .gitignore                      # Git exclusions
+├── index.html
 ├── public/
-│   └── dashboard.html             # Main dashboard (HTML + CSS + JS)
-└── .github/
-    └── workflows/
-        └── deploy.yml             # GitHub Actions auto-deploy workflow
+│   └── dashboard.html
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
+└── README.md
 ```
 
-## 🔄 How It Works
+## Roadmap
 
-1. **Data Fetching**: Dashboard makes CORS-enabled API requests on load
-2. **Processing**: Raw data is normalized and scored
-3. **Rendering**: Results update in real-time with styled cards
-4. **Caching**: Browser caches API responses to minimize rate-limit hits
-5. **Auto-deploy**: GitHub Actions runs on push → builds → deploys to `gh-pages`
+- Add a private serverless proxy for true key protection.
+- Add richer Treasury yield views, including 2Y/10Y spread.
+- Expand EIA support for crude, gasoline, and distillate inventories.
+- Replace TradingEconomics guest access with authenticated credentials if needed.
+- Add historical charts and local caching.
+- Add CSV export for indicator snapshots.
 
-## 🎨 Customization
+## License
 
-### Styling
-Edit the `<style>` section in `public/dashboard.html` to customize colors, fonts, and layout.
-
-### Data Refresh Interval
-Modify the `setInterval()` call (default: 5 minutes):
-```javascript
-setInterval(fetchAllData, 5 * 60 * 1000); // Change 5 to desired minutes
-```
-
-### Impact Score Formula
-Adjust weights in the `calculateImpactScore()` function to reflect your analysis.
-
-## 🚦 Status & Monitoring
-
-- **API Health**: Check individual API response times in browser console
-- **Rate Limits**: Monitor API vendor limits (FRED: 120 req/min, Alpha Vantage: 5 req/min free tier)
-- **Deployment**: View status at [Actions](https://github.com/ImLimonH/macro-crypto-dashboard/actions)
-
-## 🔮 Future Enhancements
-
-- [ ] Treasury Yield Curve (10Y/2Y spread)
-- [ ] Oil Inventory Data (EIA API)
-- [ ] Purchasing Managers' Index (PMI)
-- [ ] Historical data charting (Chart.js integration)
-- [ ] WebSocket real-time updates
-- [ ] Dark/Light theme toggle
-- [ ] Data export (CSV/JSON)
-- [ ] Mobile app wrapper
-
-## 📝 License
-
-MIT License - See [LICENSE](LICENSE) for details.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit changes (`git commit -m 'Add feature'`)
-4. Push to branch (`git push origin feature/your-feature`)
-5. Open a Pull Request
-
-## 📧 Support
-
-For issues, questions, or suggestions, open a [GitHub Issue](https://github.com/ImLimonH/macro-crypto-dashboard/issues).
-
----
-
-**Built with ❤️ by [ImLimonH](https://github.com/ImLimonH)**
+MIT
